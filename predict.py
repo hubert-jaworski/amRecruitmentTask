@@ -1,12 +1,17 @@
 import pickle
+import keras
+import numpy as np
 
-CURRENT_MODEL = 'sklearn_mlpc_model.pkl'
+CURRENT_MODEL = 'keras_cnn_model.h5'
 
 def load_model():
-    with open(CURRENT_MODEL, 'rb') as f:
-        model = pickle.load(f)
+    if CURRENT_MODEL.endswith('.pkl'):
+        with open(CURRENT_MODEL, 'rb') as f:
+            model = pickle.load(f)
+    else:
+        model = keras.models.load_model(CURRENT_MODEL)
     return model
 
 def predict(input_data):
     model = load_model()
-    return model.predict(input_data)
+    return np.argmax(model.predict(input_data), axis=1)
