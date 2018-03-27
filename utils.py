@@ -1,6 +1,11 @@
+import itertools
 import pickle
-import numpy as np
+from collections import Counter
+
 import matplotlib.pyplot as plt
+import numpy as np
+from keras.utils import to_categorical
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 
 
@@ -42,3 +47,54 @@ def plot_img_for_each_class(images, labels):
         images_of_label = images[labels==label]
         for img in images_of_label[:3]:
             plot_img(img, label)
+
+
+def calculate_class_weight(labels):
+    labels_dict = Counter(labels)
+    m = max(labels_dict.values())
+    class_weights = dict()
+
+    for label in labels_dict.keys():
+        if labels_dict[label]:
+            score = m / labels_dict[label]
+        else:
+            score = 1
+        class_weights[label] = score
+    return class_weights
+
+def plot_confusion_matrix(labels_true, labels_predicted):
+    classes = ['6', 'P', 'O', 'V', 'W', '3', 'A', '8', 'T', '1', '0', '9', 'H', 'R', 'N', '7', 'K', 'L', 'G', '4', 'Y',
+               'C', 'E', 'J', '5', 'I', 'S', '2', 'F', 'Z', '-', 'Q', 'M', 'B', 'D', 'U']
+
+    cm = confusion_matrix(labels_true, labels_predicted, labels=range(36))
+
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title('Confusion matrix')
+    plt.colorbar()
+
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes)
+    plt.yticks(tick_marks, classes)
+
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j],
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > cm.max() / 2 else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
+    plt.show()
+
+if __name__ == '__main__':
+    from predict import predict
+
+    images_tst, labels_tst = load_data('test_sample.pkl')
+    images_tst = images_tst.reshape(-1, 56, 56, 1)
+    labels_tst = to_categorical(labels_tst, num_classes=36)
+
+    labels_predicted = predict(images_tst)
+    labels_true = np.argmax(labels_tst, axis=1)
+
+    plot_confusion_matrix(labels_true, labels_predicted)
